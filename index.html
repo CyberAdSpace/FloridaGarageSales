@@ -9,40 +9,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar" id="navbar">
-        <div class="container">
-            <a href="#" class="logo">
-                <span class="logo-icon">🏷️</span>
-                <span class="logo-text">Florida<span class="highlight">Garage</span>Sales</span>
-            </a>
-            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <ul class="nav-links" id="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#services">Services</a></li>
-                <li><a href="#shop">Shop</a></li>
-                <li><a href="#find-sales">Find Sales</a></li>
-                <li><a href="#contact" class="btn btn-nav">Contact Us</a></li>
-            </ul>
-        </div>
-    </nav>
-
     <!-- Hero Section -->
     <section class="hero" id="home">
         <div class="hero-overlay"></div>
         <div class="container hero-content">
-            <h1>Discover Florida's Best <span class="highlight">Garage Sale</span> Finds</h1>
-            <p class="hero-subtitle">We find treasures at garage sales across Florida and bring them to you. From Pokemon cards to vintage VHS — quality items at unbeatable prices.</p>
+            <img src="logo-sun.png" alt="Florida Garage Sales" class="hero-logo">
+            <h1>Great Finds. <span class="highlight">Better Deals.</span></h1>
+            <p class="hero-subtitle">Buy. Sell. Flip. Repeat. We find treasures at garage sales across Florida and bring them to you. From Pokemon cards to vintage VHS — quality items at unbeatable prices.</p>
             <div class="hero-buttons">
-                <a href="#shop" class="btn btn-primary">Shop Now</a>
+                <a href="/shop.html" class="btn btn-primary">Shop Now</a>
                 <a href="#services" class="btn btn-outline">List Your Sale</a>
             </div>
             <div class="hero-stats">
@@ -141,6 +119,11 @@
                     <h3>Estate Sales</h3>
                     <p>Need to clear an entire home? We specialize in organizing and running estate sales with professional care.</p>
                 </div>
+                <div class="service-card">
+                    <div class="service-icon">🚚</div>
+                    <h3>Dropshipping</h3>
+                    <p>See an item you can flip for profit? Pay our dropship fee and we'll ship it directly to your customer. You set your price, we handle fulfillment.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -193,14 +176,14 @@
                         <span class="category-tag">Variety</span>
                     </div>
                 </div>
-                <div class="category-card">
+                <a href="https://www.ebay.com/str/FloridaGarageSale" target="_blank" class="category-card">
                     <div class="category-image ebay"></div>
                     <div class="category-info">
                         <h3>eBay Store</h3>
                         <p>Shop all our listings on eBay</p>
-                        <span class="category-tag">Coming Soon</span>
+                        <span class="category-tag">Live Now</span>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
     </section>
@@ -267,7 +250,7 @@
                         <span class="contact-icon">📧</span>
                         <div>
                             <h4>Email Us</h4>
-                            <a href="mailto:info@floridagaragesales.com">info@floridagaragesales.com</a>
+                            <a href="mailto:Contact@FloridaGarageSales.com">Contact@FloridaGarageSales.com</a>
                         </div>
                     </div>
                     <div class="contact-item">
@@ -287,7 +270,7 @@
                     <div class="social-links">
                         <a href="#" class="social-link" aria-label="Facebook">FB</a>
                         <a href="#" class="social-link" aria-label="Instagram">IG</a>
-                        <a href="#" class="social-link" aria-label="eBay">eBay</a>
+                        <a href="https://www.ebay.com/str/FloridaGarageSale" target="_blank" class="social-link" aria-label="eBay">eBay</a>
                     </div>
                 </div>
                 <form class="contact-form" id="contact-form">
@@ -323,17 +306,16 @@
             <div class="footer-grid">
                 <div class="footer-brand">
                     <a href="#" class="logo">
-                        <span class="logo-icon">🏷️</span>
-                        <span class="logo-text">Florida<span class="highlight">Garage</span>Sales</span>
+                        <img src="logo.png" alt="Florida Garage Sales" class="footer-logo-img">
                     </a>
-                    <p>Florida's premier destination for garage sale finds. Buy, sell, and discover the best deals in the Sunshine State.</p>
+                    <p>Buy. Sell. Flip. Repeat. Florida's premier destination for garage sale finds and the best deals in the Sunshine State.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="#about">About Us</a></li>
                         <li><a href="#services">Services</a></li>
-                        <li><a href="#shop">Shop</a></li>
+                        <li><a href="/shop.html">Shop</a></li>
                         <li><a href="#find-sales">Find Sales</a></li>
                         <li><a href="#contact">Contact</a></li>
                     </ul>
@@ -346,6 +328,7 @@
                         <li><a href="#services">Online Selling</a></li>
                         <li><a href="#services">Consignment</a></li>
                         <li><a href="#services">Estate Sales</a></li>
+                        <li><a href="#services">Dropshipping</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
@@ -360,7 +343,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 Florida Garage Sales. All rights reserved.</p>
+                <p>&copy; 2026 Florida Garage Sales. All rights reserved.</p>
                 <p>www.FloridaGarageSales.com</p>
             </div>
         </div>

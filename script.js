@@ -1,31 +1,4 @@
-// Mobile Navigation Toggle
-const navToggle = document.getElementById('nav-toggle');
-const navLinks = document.getElementById('nav-links');
-
-navToggle.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-    navToggle.classList.toggle('active');
-});
-
-// Close mobile nav when clicking a link
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-        navToggle.classList.remove('active');
-    });
-});
-
-// Navbar scroll effect
-const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-        navbar.style.background = 'rgba(255, 255, 255, 0.98)';
-        navbar.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
-    } else {
-        navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-        navbar.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-    }
-});
+// Navigation removed — page flows naturally
 
 // Contact form handling
 const contactForm = document.getElementById('contact-form');
