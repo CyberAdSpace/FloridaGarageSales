@@ -232,8 +232,18 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Product Image</label>
+                    <label>Main Product Image</label>
                     <input type="file" id="product-image" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Additional Images</label>
+                    <input type="file" id="product-images" accept="image/*" multiple>
+                    <div id="existing-images" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+                </div>
+                <div class="form-group">
+                    <label>Product Video</label>
+                    <input type="file" id="product-video" accept="video/*">
+                    <div id="existing-video" style="margin-top:8px;"></div>
                 </div>
                 <div class="form-group">
                     <label><input type="checkbox" id="product-featured"> Featured Product</label>
@@ -383,8 +393,57 @@
             document.getElementById('product-condition').value = product ? product.condition : 'Used - Good';
             document.getElementById('product-featured').checked = product ? product.is_featured : false;
             document.getElementById('product-image').value = '';
+            document.getElementById('product-images').value = '';
+            document.getElementById('product-video').value = '';
             document.getElementById('modal-error').style.display = 'none';
+
+            // Show existing additional images
+            const existingImgs = document.getElementById('existing-images');
+            existingImgs.innerHTML = '';
+            if (product && product.image_urls && product.image_urls.length) {
+                product.image_urls.forEach(url => {
+                    const wrap = document.createElement('div');
+                    wrap.style.cssText = 'position:relative;';
+                    wrap.innerHTML = `<img src="${API_URL}${url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #d1d5db;"><button type="button" onclick="removeExtraImage(${product.id},'${url}')" style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;">×</button>`;
+                    existingImgs.appendChild(wrap);
+                });
+            }
+
+            // Show existing video
+            const existingVid = document.getElementById('existing-video');
+            existingVid.innerHTML = '';
+            if (product && product.video_url) {
+                existingVid.innerHTML = `<video src="${API_URL}${product.video_url}" style="max-width:200px;border-radius:6px;" controls></video><br><button type="button" class="btn btn-sm btn-danger" style="margin-top:4px;" onclick="removeVideoFromProduct(${product.id})">Remove Video</button>`;
+            }
+
             document.getElementById('product-modal').classList.add('active');
+        }
+
+        function removeExtraImage(productId, imageUrl) {
+            fetch(`${API_URL}/api/admin/products/${productId}/image?image_url=${encodeURIComponent(imageUrl)}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(() => {
+                editProduct(productId);
+                loadProducts();
+            });
+        }
+
+        function removeVideoFromProduct(productId) {
+            // Re-save product with remove_video flag
+            const formData = new FormData();
+            formData.append('name', document.getElementById('product-name').value);
+            formData.append('description', document.getElementById('product-description').value);
+            formData.append('price', document.getElementById('product-price').value);
+            formData.append('quantity', document.getElementById('product-quantity').value);
+            formData.append('category', document.getElementById('product-category').value);
+            formData.append('condition', document.getElementById('product-condition').value);
+            formData.append('is_featured', document.getElementById('product-featured').checked);
+            formData.append('remove_video', 'true');
+            fetch(`${API_URL}/api/admin/products/${productId}`, {
+                method: 'PUT', body: formData,
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(() => { editProduct(productId); loadProducts(); });
         }
 
         function closeProductModal() {
@@ -411,6 +470,14 @@
 
             const imageFile = document.getElementById('product-image').files[0];
             if (imageFile) formData.append('image', imageFile);
+
+            const extraImages = document.getElementById('product-images').files;
+            for (let i = 0; i < extraImages.length; i++) {
+                formData.append('images', extraImages[i]);
+            }
+
+            const videoFile = document.getElementById('product-video').files[0];
+            if (videoFile) formData.append('video', videoFile);
 
             const url = id ? `${API_URL}/api/admin/products/${id}` : `${API_URL}/api/admin/products`;
             const method = id ? 'PUT' : 'POST';

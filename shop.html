@@ -112,6 +112,55 @@
         }
         .empty-shop .icon { font-size: 4rem; margin-bottom: 15px; }
 
+        /* Product detail modal */
+        .product-modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            z-index: 1002; align-items: center; justify-content: center;
+        }
+        .product-modal-overlay.active { display: flex; }
+        .product-modal {
+            background: white; border-radius: 16px; max-width: 800px; width: 95%;
+            max-height: 90vh; overflow-y: auto; position: relative;
+        }
+        .product-modal-close {
+            position: absolute; top: 12px; right: 16px; background: none; border: none;
+            font-size: 1.8rem; cursor: pointer; color: var(--gray-600); z-index: 2;
+        }
+        .product-modal-gallery {
+            position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden;
+            border-radius: 16px 16px 0 0; background: #f3f4f6;
+        }
+        .product-modal-gallery img, .product-modal-gallery video {
+            width: 100%; height: 100%; object-fit: contain; display: none;
+        }
+        .product-modal-gallery img.active, .product-modal-gallery video.active {
+            display: block;
+        }
+        .gallery-nav {
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.4);
+            color: white; border: none; width: 40px; height: 40px; border-radius: 50%;
+            font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .gallery-nav.prev { left: 10px; }
+        .gallery-nav.next { right: 10px; }
+        .gallery-dots {
+            display: flex; gap: 6px; justify-content: center; padding: 10px 0;
+        }
+        .gallery-dot {
+            width: 10px; height: 10px; border-radius: 50%; background: var(--gray-300);
+            border: none; cursor: pointer; padding: 0;
+        }
+        .gallery-dot.active { background: var(--primary); }
+        .product-modal-body { padding: 24px; }
+        .product-modal-body h2 { margin-bottom: 6px; font-size: 1.5rem; }
+        .product-modal-body .price { color: var(--primary); font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
+        .product-modal-body .meta { color: var(--gray-600); font-size: 0.9rem; margin-bottom: 12px; }
+        .product-modal-body .desc { color: var(--gray-700); line-height: 1.6; margin-bottom: 20px; }
+        .img-count {
+            position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6);
+            color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;
+        }
+
         .success-banner {
             background: #d1fae5; color: #065f46; padding: 15px; text-align: center;
             font-weight: 500; border-radius: 8px; margin-bottom: 20px;
@@ -226,13 +275,18 @@
                 container.innerHTML = '<div class="empty-shop"><div class="icon">🔍</div><p>No items in this category yet. Check back soon!</p></div>';
                 return;
             }
-            container.innerHTML = products.map(p => `
+            container.innerHTML = products.map(p => {
+                const totalMedia = 1 + (p.image_urls ? p.image_urls.length : 0) + (p.video_url ? 1 : 0);
+                return `
                 <div class="product-item">
-                    ${p.image_url 
-                        ? `<img src="${API_URL}${p.image_url}" alt="${p.name}">` 
-                        : `<div class="no-img">🏷️</div>`}
+                    <div style="position:relative;cursor:pointer;" onclick="openProductDetail(${p.id})">
+                        ${p.image_url 
+                            ? `<img src="${API_URL}${p.image_url}" alt="${p.name}">` 
+                            : `<div class="no-img">🏷️</div>`}
+                        ${totalMedia > 1 ? `<span class="img-count">${totalMedia} photos${p.video_url ? ' + video' : ''}</span>` : ''}
+                    </div>
                     <div class="product-body">
-                        <h3>${p.name}</h3>
+                        <h3 style="cursor:pointer;" onclick="openProductDetail(${p.id})">${p.name}</h3>
                         <div class="product-meta">${p.category} · ${p.condition}</div>
                         <div class="product-price">$${p.price.toFixed(2)}</div>
                         ${p.description ? `<div class="product-desc">${p.description.substring(0, 100)}${p.description.length > 100 ? '...' : ''}</div>` : ''}
@@ -240,8 +294,8 @@
                             ${p.quantity < 1 ? 'Sold Out' : 'Add to Cart'}
                         </button>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
         // Filters
@@ -269,6 +323,15 @@
             }
             saveCart();
             updateCartUI();
+            // Auto-open cart panel
+            document.getElementById('cart-panel').classList.add('open');
+            document.getElementById('cart-overlay').classList.add('open');
+            // Button feedback
+            const btn = event.target;
+            const origText = btn.textContent;
+            btn.textContent = 'Added!';
+            btn.style.background = '#2E8B57';
+            setTimeout(() => { btn.textContent = origText; btn.style.background = ''; }, 1200);
         }
 
         function removeFromCart(productId) {
@@ -326,10 +389,94 @@
                 .catch(e => alert('Checkout error: ' + e.message));
         }
 
+        // Product detail modal
+        let currentSlide = 0;
+        let mediaItems = [];
+
+        function openProductDetail(productId) {
+            const p = allProducts.find(x => x.id === productId);
+            if (!p) return;
+
+            mediaItems = [];
+            if (p.image_url) mediaItems.push({ type: 'image', url: `${API_URL}${p.image_url}` });
+            if (p.image_urls) p.image_urls.forEach(u => mediaItems.push({ type: 'image', url: `${API_URL}${u}` }));
+            if (p.video_url) mediaItems.push({ type: 'video', url: `${API_URL}${p.video_url}` });
+
+            if (!mediaItems.length) mediaItems.push({ type: 'none' });
+
+            const gallery = document.getElementById('detail-gallery');
+            gallery.innerHTML = mediaItems.map((m, i) => {
+                if (m.type === 'image') return `<img src="${m.url}" class="${i === 0 ? 'active' : ''}" alt="">`;
+                if (m.type === 'video') return `<video src="${m.url}" class="${i === 0 ? 'active' : ''}" controls></video>`;
+                return `<div class="no-img active" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem;">🏷️</div>`;
+            }).join('');
+
+            if (mediaItems.length > 1) {
+                gallery.innerHTML += `<button class="gallery-nav prev" onclick="changeSlide(-1)">‹</button><button class="gallery-nav next" onclick="changeSlide(1)">›</button>`;
+            }
+
+            const dots = document.getElementById('detail-dots');
+            dots.innerHTML = mediaItems.length > 1 ? mediaItems.map((m, i) =>
+                `<button class="gallery-dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></button>`
+            ).join('') : '';
+
+            document.getElementById('detail-name').textContent = p.name;
+            document.getElementById('detail-price').textContent = `$${p.price.toFixed(2)}`;
+            document.getElementById('detail-meta').textContent = `${p.category} · ${p.condition}`;
+            document.getElementById('detail-desc').textContent = p.description || '';
+            document.getElementById('detail-add-btn').onclick = () => addToCart(p.id);
+            document.getElementById('detail-add-btn').disabled = p.quantity < 1;
+            document.getElementById('detail-add-btn').textContent = p.quantity < 1 ? 'Sold Out' : 'Add to Cart';
+
+            currentSlide = 0;
+            document.getElementById('product-detail-modal').classList.add('active');
+        }
+
+        function closeProductDetail() {
+            document.getElementById('product-detail-modal').classList.remove('active');
+            // Pause any playing videos
+            document.querySelectorAll('#detail-gallery video').forEach(v => v.pause());
+        }
+
+        function changeSlide(dir) {
+            currentSlide = (currentSlide + dir + mediaItems.length) % mediaItems.length;
+            updateGallery();
+        }
+
+        function goToSlide(idx) {
+            currentSlide = idx;
+            updateGallery();
+        }
+
+        function updateGallery() {
+            const items = document.querySelectorAll('#detail-gallery > img, #detail-gallery > video, #detail-gallery > div');
+            items.forEach((el, i) => {
+                el.classList.toggle('active', i === currentSlide);
+                if (el.tagName === 'VIDEO' && i !== currentSlide) el.pause();
+            });
+            document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+        }
+
         // Nav toggle for mobile
         document.getElementById('nav-toggle').addEventListener('click', () => {
             document.getElementById('nav-links').classList.toggle('active');
         });
     </script>
+
+    <!-- Product Detail Modal -->
+    <div class="product-modal-overlay" id="product-detail-modal" onclick="if(event.target===this)closeProductDetail()">
+        <div class="product-modal">
+            <button class="product-modal-close" onclick="closeProductDetail()">&times;</button>
+            <div class="product-modal-gallery" id="detail-gallery"></div>
+            <div class="gallery-dots" id="detail-dots"></div>
+            <div class="product-modal-body">
+                <h2 id="detail-name"></h2>
+                <div class="price" id="detail-price"></div>
+                <div class="meta" id="detail-meta"></div>
+                <div class="desc" id="detail-desc"></div>
+                <button class="add-to-cart" id="detail-add-btn">Add to Cart</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
