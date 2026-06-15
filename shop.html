@@ -271,7 +271,7 @@
         const TOKEN_CONTRACT = 'vtoken';
         const TOKEN_SYMBOL = 'FGSALES';
         const TOKEN_PRECISION = 4;
-        const STORE_ACCOUNT = 'fgsstore'; // FGS store XPR account
+        const STORE_ACCOUNT = 'fgsales'; // FGS store XPR account
 
         let xprLink = null;
         let xprSession = null;
@@ -406,7 +406,7 @@
                         restoreSession: false,
                     },
                     transportOptions: {
-                        requestAccount: 'fgsstore',
+                        requestAccount: 'fgsales',
                     },
                     selectorOptions: {
                         appName: 'Florida Garage Sales',
@@ -434,7 +434,7 @@
                         restoreSession: true,
                     },
                     transportOptions: {
-                        requestAccount: 'fgsstore',
+                        requestAccount: 'fgsales',
                     },
                     selectorOptions: {
                         appName: 'Florida Garage Sales',
@@ -455,7 +455,7 @@
         async function disconnectWallet() {
             if (xprLink && xprSession) {
                 try {
-                    await xprLink.removeSession('fgsstore', xprSession.auth);
+                    await xprLink.removeSession('fgsales', xprSession.auth);
                 } catch (e) { console.log(e); }
             }
             xprLink = null;
