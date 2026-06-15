@@ -174,6 +174,60 @@
         .crypto-status.error { background: #fee2e2; color: #991b1b; }
         .crypto-status.pending { background: #fef3c7; color: #92400e; }
 
+        /* Shipping info modal */
+        .shipping-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;
+        }
+        .shipping-overlay.active { display: flex; }
+        .shipping-modal {
+            background: white; border-radius: 16px; padding: 30px; width: 90%; max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;
+        }
+        .shipping-modal h3 {
+            font-size: 1.3rem; margin-bottom: 5px; color: var(--gray-900);
+        }
+        .shipping-modal p.subtitle {
+            color: var(--gray-500); font-size: 0.85rem; margin-bottom: 20px;
+        }
+        .shipping-modal .form-group {
+            margin-bottom: 14px;
+        }
+        .shipping-modal label {
+            display: block; font-size: 0.85rem; font-weight: 600; color: var(--gray-700); margin-bottom: 4px;
+        }
+        .shipping-modal input, .shipping-modal select {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--gray-300); border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit;
+        }
+        .shipping-modal input:focus, .shipping-modal select:focus {
+            outline: none; border-color: #7B2FFF; box-shadow: 0 0 0 3px rgba(123,47,255,0.1);
+        }
+        .shipping-modal .form-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+        }
+        .shipping-modal .btn-row {
+            display: flex; gap: 10px; margin-top: 20px;
+        }
+        .shipping-modal .btn-cancel {
+            flex: 1; padding: 12px; border: 2px solid var(--gray-300); background: white;
+            border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; font-size: 0.95rem;
+        }
+        .shipping-modal .btn-confirm {
+            flex: 2; padding: 12px; color: white; border: none; border-radius: 8px;
+            font-weight: 600; cursor: pointer; font-family: inherit; font-size: 0.95rem;
+            background: linear-gradient(135deg, #7B2FFF, #5B1FCC);
+        }
+        .shipping-modal .btn-confirm:hover { opacity: 0.9; }
+        .shipping-modal .btn-cancel:hover { background: var(--gray-50); }
+        .shipping-modal .order-summary {
+            background: var(--gray-50); border-radius: 8px; padding: 12px; margin-bottom: 18px;
+            font-size: 0.9rem;
+        }
+        .shipping-modal .order-summary .total {
+            font-weight: 700; color: #5B1FCC; font-size: 1.1rem;
+        }
+
         .success-banner {
             background: #d1fae5; color: #065f46; padding: 15px; text-align: center;
             font-weight: 500; border-radius: 8px; margin-bottom: 20px;
@@ -261,6 +315,63 @@
                 <button class="checkout-btn" onclick="checkout()">Pay with Card (Stripe)</button>
             </div>
             <div id="crypto-status"></div>
+        </div>
+    </div>
+
+    <!-- Shipping Info Modal -->
+    <div class="shipping-overlay" id="shipping-overlay">
+        <div class="shipping-modal">
+            <h3>Shipping Information</h3>
+            <p class="subtitle">Enter your details to complete your FGSALES token payment</p>
+            <div class="order-summary" id="shipping-order-summary"></div>
+            <form id="shipping-form" onsubmit="return false;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" id="ship-first" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" id="ship-last" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="ship-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Street Address *</label>
+                    <input type="text" id="ship-address" required>
+                </div>
+                <div class="form-group">
+                    <label>Apartment / Suite (optional)</label>
+                    <input type="text" id="ship-address2">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City *</label>
+                        <input type="text" id="ship-city" required>
+                    </div>
+                    <div class="form-group">
+                        <label>State *</label>
+                        <input type="text" id="ship-state" value="FL" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ZIP Code *</label>
+                        <input type="text" id="ship-zip" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone (optional)</label>
+                        <input type="tel" id="ship-phone">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button type="button" class="btn-cancel" onclick="closeShippingModal()">Cancel</button>
+                    <button type="button" class="btn-confirm" id="confirm-crypto-btn" onclick="confirmCryptoCheckout()">Confirm & Pay with FGSALES</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -530,21 +641,51 @@
             document.getElementById('checkout-divider').style.display = 'block';
         }
 
-        async function cryptoCheckout() {
+        function cryptoCheckout() {
             if (!xprSession) return alert('Please connect your wallet first.');
             if (!cart.length) return alert('Your cart is empty!');
+
+            const total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+            document.getElementById('shipping-order-summary').innerHTML = `
+                <div>${cart.map(i => `${i.name} x${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`).join('<br>')}</div>
+                <div style="margin-top:8px;">Total: <span class="total">${total.toFixed(TOKEN_PRECISION)} ${TOKEN_SYMBOL}</span></div>`;
+            document.getElementById('shipping-overlay').classList.add('active');
+        }
+
+        function closeShippingModal() {
+            document.getElementById('shipping-overlay').classList.remove('active');
+        }
+
+        async function confirmCryptoCheckout() {
+            const form = document.getElementById('shipping-form');
+            const fields = ['ship-first','ship-last','ship-email','ship-address','ship-city','ship-state','ship-zip'];
+            for (const id of fields) {
+                if (!document.getElementById(id).value.trim()) {
+                    document.getElementById(id).focus();
+                    return alert('Please fill in all required fields.');
+                }
+            }
+
+            const shipping = {
+                name: document.getElementById('ship-first').value.trim() + ' ' + document.getElementById('ship-last').value.trim(),
+                email: document.getElementById('ship-email').value.trim(),
+                address: document.getElementById('ship-address').value.trim(),
+                address2: document.getElementById('ship-address2').value.trim(),
+                city: document.getElementById('ship-city').value.trim(),
+                state: document.getElementById('ship-state').value.trim(),
+                zip: document.getElementById('ship-zip').value.trim(),
+                phone: document.getElementById('ship-phone').value.trim(),
+            };
 
             const total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
             const quantity = total.toFixed(TOKEN_PRECISION) + ' ' + TOKEN_SYMBOL;
             const memo = 'FGS Order: ' + cart.map(i => i.name + ' x' + i.quantity).join(', ');
 
-            const statusEl = document.getElementById('crypto-status');
-            statusEl.className = 'crypto-status pending';
-            statusEl.textContent = 'Awaiting wallet approval...';
+            const confirmBtn = document.getElementById('confirm-crypto-btn');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Awaiting wallet approval...';
 
-            const btn = document.getElementById('crypto-checkout-btn');
-            btn.disabled = true;
-            btn.textContent = 'Processing...';
+            const statusEl = document.getElementById('crypto-status');
 
             try {
                 const result = await xprSession.transact({
@@ -566,7 +707,8 @@
 
                 const txId = result.processed ? result.processed.id : (result.transaction_id || 'confirmed');
 
-                // Record the crypto order on our backend
+                closeShippingModal();
+
                 try {
                     await fetch(`${API_URL}/api/crypto-order`, {
                         method: 'POST',
@@ -577,12 +719,15 @@
                             payer: xprSession.auth.actor,
                             token: TOKEN_SYMBOL,
                             amount: total,
+                            customer_name: shipping.name,
+                            customer_email: shipping.email,
+                            shipping_address: shipping,
                         }),
                     });
                 } catch (e) { console.log('Backend order recording:', e); }
 
                 statusEl.className = 'crypto-status success';
-                statusEl.innerHTML = `Payment successful! TX: <a href="https://explorer.xprnetwork.org/transaction/${txId}" target="_blank" style="color:#065f46;text-decoration:underline;">${txId.substring(0, 12)}...</a>`;
+                statusEl.innerHTML = `Payment successful! TX: <a href="https://explorer.xprnetwork.org/transaction/${txId}" target="_blank" style="color:#065f46;text-decoration:underline;">${txId.substring(0, 12)}...</a><br><small>Shipping to: ${shipping.name}, ${shipping.city}, ${shipping.state} ${shipping.zip}</small>`;
 
                 localStorage.removeItem('fgs_cart');
                 cart = [];
@@ -594,8 +739,8 @@
                 statusEl.className = 'crypto-status error';
                 statusEl.textContent = 'Payment failed: ' + (e.message || 'Transaction rejected');
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Pay with ' + TOKEN_SYMBOL;
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Confirm & Pay with FGSALES';
             }
         }
 
