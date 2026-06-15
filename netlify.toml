@@ -1,6 +1,19 @@
 [build]
   publish = "."
 
+# Redirect admin subdomain to admin.html
+[[redirects]]
+  from = "https://admin.floridagaragesales.com/*"
+  to = "/admin.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://admin.floridagaragesales.com"
+  to = "/admin.html"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]
